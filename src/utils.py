@@ -81,6 +81,55 @@ class DataSummary:
         return term1 ** 0.5 + term2 ** 0.5
 
 
+class MetricAggregator:
+    def __init__(self):
+        self.m0 = []
+        self.m1 = []
+        self.m2 = []
+
+    def confidence_band(self):
+        m0 = np.array(self.m0)
+        m1 = np.array(self.m1)
+        m2 = np.array(self.m2)
+
+        m0 = np.maximum(m0, 1)
+
+        mean = m1 / m0
+        var = (m2 - m1 ** 2 / m0) / (m0 - 1)
+        sd = var ** 0.5
+        se = (var / m0) ** 0.5
+
+        return mean, sd, se
+
+    def plot(self, ax, label, scale=2.0):
+        mean, sd, se = self.confidence_band()
+
+        x = np.arange(len(mean))
+
+        lower = mean - scale * se
+        upper = mean + scale * se
+
+        ax.fill_between(x, lower, upper, alpha=0.2)
+        ax.plot(x, mean, label=label)
+
+    def aggregate(self, xs, filter=lambda _: True):
+        self._ensure_len(len(xs))
+
+        for i, x in enumerate(xs):
+            if filter(i):
+                self.m0[i] += 1
+                self.m1[i] += x
+                self.m2[i] += x ** 2
+
+    def _ensure_len(self, n):
+        dn = n - len(self.m0)
+
+        if dn > 0:
+            self.m0 += [0] * dn
+            self.m1 += [0] * dn
+            self.m2 += [0] * dn
+
+
 class StateFactory:
     def __init__(self, seed):
         self.seed = seed
