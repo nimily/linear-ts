@@ -88,36 +88,6 @@ def run_experiments(n, d, k, t, s):
     plt.savefig(f"plots/regret-{n}-{d}-{k}-{t}.pdf")
     plt.show()
 
-    # aggregates = defaultdict(MetricAggregator)
-    # for i in range(n):
-    #     print(f'Running experiment [{i}]...')
-    #     metrics = run_single_experiment(d, k, t, g, l, state_factory)
-    #     for name, metric in metrics.items():
-    #         aggregates[name].aggregate(np.cumsum(metric.regrets))
-    #
-    # for name, aggregate in aggregates.items():
-    #     mean, sd, se = aggregate.confidence_band()
-    #
-    #     lower = mean - 2 * se
-    #     upper = mean + 2 * se
-    #
-    #     plt.fill_between(range(t), lower, upper, alpha=0.2)
-    #     plt.plot(range(t), mean, label=name)
-    #
-    # plt.legend()
-    # plt.savefig(f'plots/regret-{n}-{d}-{k}-{t}-{s}-{"grouped" if g else "ungrouped"}.pdf')
-    # plt.show()
-    #
-    # print()
-    # print('  policy   |   regret')
-    # print('-' * 25)
-    # for name, aggregate in aggregates.items():
-    #     mean = aggregate.confidence_band()[0][-1]
-    #     print(f'{name:10} | {mean:.2f}')
-    # print()
-    #
-    # print(f'All the experiments finished successfully.')
-
 
 def __main__():
     parser = argparse.ArgumentParser(
@@ -126,7 +96,7 @@ def __main__():
 
     parser.add_argument("-n", type=int, help="number of iterations", default=50)
     parser.add_argument("-k", type=int, help="number of actions", default=10)
-    parser.add_argument("-d", type=int, help="dimension", default=120)
+    parser.add_argument("-d", type=int, help="dimension", default=100)
     parser.add_argument("-t", type=int, help="time horizon", default=10000)
     parser.add_argument("-s", type=int, help="random seed", default=1)
 
