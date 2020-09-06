@@ -90,10 +90,10 @@ def __main__():
         description="Run simulations for various ROFUL algorithms."
     )
 
-    parser.add_argument("-n", type=int, help="number of iterations", default=50)
-    parser.add_argument("-k", type=int, help="number of actions", default=10)
-    parser.add_argument("-d", type=int, help="dimension", default=100)
-    parser.add_argument("-t", type=int, help="time horizon", default=10000)
+    parser.add_argument("-n", type=int, help="number of iterations", default=100)
+    parser.add_argument("-k", type=int, help="number of actions", default=100)
+    parser.add_argument("-d", type=int, help="dimension", default=50)
+    parser.add_argument("-t", type=int, help="time horizon", default=2000)
     parser.add_argument("-s", type=int, help="random seed", default=1)
 
     args = parser.parse_args()
