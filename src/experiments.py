@@ -58,6 +58,7 @@ def run_experiments(n, d, k, t, s):
     state_factory = StateFactory(s + 1)
 
     regrets = defaultdict(MetricAggregator)
+    cumregrets = defaultdict(MetricAggregator)
     thinnesses = defaultdict(MetricAggregator)
     for i in range(n):
         print(f"Running experiment {i}...")
@@ -66,22 +67,22 @@ def run_experiments(n, d, k, t, s):
         )
 
         for name, (regret, thinness) in results.items():
-            regrets[name].aggregate(np.cumsum(regret))
+            regrets[name].aggregate(regret)
+            cumregrets[name].aggregate(np.cumsum(regret))
             thinnesses[name].aggregate(thinness)
 
-    for name, thinness in thinnesses.items():
-        thinness.plot(plt, name)
+    metrics = {
+        "regret": regrets,
+        "cumregret": cumregrets,
+        "thinnesses": thinnesses,
+    }
+    for name, metric in metrics.items():
+        plt.clf()
+        for alg, agg in metric.items():
+            agg.plot(plt, alg)
 
-    plt.legend()
-    plt.savefig(f"plots/thinness-{n}-{d}-{k}-{t}.pdf")
-    plt.show()
-
-    for name, regret in regrets.items():
-        regret.plot(plt, name)
-
-    plt.legend()
-    plt.savefig(f"plots/regret-{n}-{d}-{k}-{t}.pdf")
-    plt.show()
+        plt.legend()
+        plt.savefig(f"plots/{name}-{n}-{d}-{k}-{t}.pdf")
 
 
 def __main__():
