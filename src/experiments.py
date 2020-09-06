@@ -19,7 +19,7 @@ def russo_scenario(
     state_factory, k=100, d=100, t=1000, sd=1.0, prior_var=10.0, arm_bound=0.1
 ):
     param = state_factory().randn(d) * prior_var ** 0.5
-    ctx_gen = CtxGenerator(k, d, arm_bound, state=state_factory())
+    ctx_gen = CtxGenerator.uniform_on_sphere(k, d, arm_bound, state=state_factory())
     noise_gen = NoiseGenerator.gaussian_noise(sd, state=state_factory())
 
     env = Environment(param, ctx_gen, noise_gen)
@@ -62,12 +62,7 @@ def run_experiments(n, d, k, t, s):
     for i in range(n):
         print(f"Running experiment {i}...")
         results = russo_scenario(
-            d=d,
-            k=k,
-            t=t,
-            prior_var=10.0,
-            arm_bound=1 / 10 ** 0.5,
-            state_factory=state_factory,
+            d=d, k=k, t=t, prior_var=10.0, arm_bound=1.0, state_factory=state_factory,
         )
 
         for name, (regret, thinness) in results.items():

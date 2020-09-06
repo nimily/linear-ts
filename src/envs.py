@@ -120,14 +120,25 @@ class ContextGenerator:
 
 
 class StochasticContextGenerator(ContextGenerator):
-    def __init__(self, k, d, bound, state=npr):
+    def __init__(self, k, d, rand_gen):
         self.k = k
         self.d = d
-        self.bound = bound
-
-        self.state = state
+        self.rand_gen = rand_gen
 
     def generate(self, t):
-        arms = self.state.uniform(-self.bound, self.bound, (self.k, self.d))
+        return Context(t, self.rand_gen())
 
-        return Context(t, arms)
+    @staticmethod
+    def uniform_entries(k, d, bound, state=npr):
+        def _rand():
+            return state.uniform(-bound, bound, (k, d))
+
+        return StochasticContextGenerator(k, d, _rand)
+
+    @staticmethod
+    def uniform_on_sphere(k, d, radius, state=npr):
+        def _rand():
+            array = state.randn(k, d)
+            return radius * array / npl.norm(array, ord=2, axis=0, keepdims=True)
+
+        return StochasticContextGenerator(k, d, _rand)
