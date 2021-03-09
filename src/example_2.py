@@ -38,9 +38,8 @@ def compute_prob(dim, mu, rho, sigma, tau, state_factory):
     sample = state.randn(3 * dim)
     x0_selected = sample @ x0 > 0 and sample @ x0 > sample @ x1
 
-    # compute the probability of pulling x0 or x1 at t=2
+    # the observation after the first round
     y = theta @ x0 + state.randn() * tau
-
     mean = (y * x0) / (1 + x0 @ x0)
 
     # computing the probability that x0 is pulled at t=2
@@ -68,13 +67,20 @@ def run_experiment(n_iter, dim, mu, rho, sigma, tau, seed):
         [compute_prob(dim, mu, rho, sigma, tau, state_factory) for _ in range(n_iter)]
     )
 
-    return np.array(
-        [np.mean(results[:, 0]), np.mean(results[:, 1]), np.min(results[:, 2])]
-    )
+    if rho > 0.5:
+        print(results)
+        exit(0)
+
+    return results
 
 
 def __main__():
     types = ["mu", "rho", "dim"]
+    labels = {
+        "mu": "$\\mu$",
+        "rho": "$\\rho$",
+        "dim": "$d$",
+    }
 
     parser = argparse.ArgumentParser(
         description="Verify the Thompson sampling failures empirically."
@@ -82,7 +88,7 @@ def __main__():
 
     parser.add_argument("--n-iter", type=int, help="number of iterations", default=50)
     parser.add_argument(
-        "--n-value", type=int, help="number of different values to try", default=50
+        "--n-value", type=int, help="number of different values to try", default=21
     )
     parser.add_argument(
         "--dim", type=int, help="number of iterations", default=50 * 1000
@@ -98,18 +104,26 @@ def __main__():
 
     args = parser.parse_args()
 
+    xticks = None
+    xrots = "0"
     if args.change == "mu":
         mus = np.linspace(0.0, args.mu, args.n_value)
+        xticks = [f"{i:.2f}" for i in mus]
+        xrots = "45"
     else:
         mus = np.repeat(args.mu, args.n_value)
 
     if args.change == "rho":
         rhos = np.linspace(0.0, args.rho, args.n_value)
+        xticks = [f"{i:.2f}" for i in rhos]
+        xrots = "45"
     else:
         rhos = np.repeat(args.rho, args.n_value)
 
     if args.change == "dim":
-        dims = np.geomspace(1, args.dim, args.n_value, dtype=np.int)
+        dims = 2 ** np.arange(1, args.n_value + 1)
+        args.dim = dims[-1]
+        xticks = [f"$2^{{{i}}}$" for i in range(args.n_value)]
     else:
         dims = np.repeat(args.dim, args.n_value).astype(np.int)
 
@@ -130,29 +144,24 @@ def __main__():
     results = np.array(results)
 
     # plotting the data
-    if args.change == "mu":
-        x = mus
-    elif args.change == "rho":
-        x = rhos
-    else:
-        x = dims
+    y = results[:, :, 2].T
+    plt.yscale('log')
+    plt.boxplot(y, positions=range(args.n_value), showfliers=False)
+    plt.xticks(range(args.n_value), xticks, rotation=xrots)
 
-    y = np.log(results[:, 2])
-    plt.plot(x, y)
-    plt.scatter(x, y)
-
-    plt.xlabel(args.change)
-    plt.ylabel("log(expectation of failure time)")
+    plt.xlabel(labels[args.change])
+    plt.ylabel("Expected number of failures for LinTS")
+    plt.tight_layout()
 
     plt.savefig(
         f"plots/example-2-{args.change}-{args.dim}-{args.mu}-{args.rho}-{args.seed}.pdf"
     )
 
     print(f"Ratio of times x1 is optimal:")
-    print(f"\t{results[:, 0]}")
+    print(f"\t{results[:, :, 0].mean(axis=1)}")
 
     print(f"Ratio of times x0 is selected at t=0:")
-    print(f"\t{results[:, 1]}")
+    print(f"\t{results[:, :, 1].mean(axis=1)}")
 
     print("Experiment finished successfully.")
 

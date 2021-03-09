@@ -48,31 +48,29 @@ def run_experiments(n_iter, sigma, tau, seed):
     state_factory = StateFactory(seed)
 
     n_blocks = 2 ** np.arange(18)
-    n_failure = np.zeros_like(n_blocks, dtype=np.float64)
+    n_failures = np.zeros((n_iter,) + n_blocks.shape, dtype=np.float64)
 
     for i, n_block in enumerate(n_blocks):
         results = [
             compute_prob(n_block, sigma, tau, state_factory) for _ in range(n_iter)
         ]
 
-        max_prob = max(p for _, p in results)
-        min_fail = int(1 / max_prob)
-
+        n_failures[:, i] = np.array([1 / p for _, p in results])
         n_subopt = sum(i for i, _ in results) / len(results)
 
         print(
             f"Number of blocks = {n_block:7d} -- proportion of times 0 is suboptimal = {n_subopt:.2f} -- "
-            f"min number of steps TS will fail = {min_fail}"
+            f"min number of steps TS will fail = {n_failures[:, i].min()}"
         )
 
-        n_failure[i] = min_fail
-
     # plotting the data
-    plt.plot(n_blocks, np.log(n_failure))
-    plt.scatter(n_blocks, np.log(n_failure))
+    plt.yscale('log')
+    plt.boxplot(n_failures, showfliers=False)
+    plt.xticks(range(1, 19), [f"$2^{{{i}}}$" for i in range(1, 19)])
 
-    plt.xlabel("number of blocks (half of the dimension)")
-    plt.ylabel("log(expectation of failure time)")
+    plt.xlabel("Number of blocks (half of the dimension)")
+    plt.ylabel("Expected number of failures for LinTS")
+    plt.tight_layout()
 
     plt.savefig("plots/example-1.pdf")
 

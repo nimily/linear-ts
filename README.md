@@ -12,7 +12,8 @@ By running the following commands, the plots in the paper can be reproduced.
 ```shell script
 PYTHONPATH=src python -m example_1
 PYTHONPATH=src python -m example_2 --change mu --mu 1.0 --dim 2000
-PYTHONPATH=src python -m example_2 --change dim --mu 0.1 --dim 120000
+PYTHONPATH=src python -m example_2 --change rho --rho 1.0 --dim 2000
+PYTHONPATH=src python -m example_2 --change dim --mu 0.1 --n-value 18
 PYTHONPATH=src python -m experiments
 ```
 Each script also accepts a set of parameters used in the experiment which can be found using `--help` argument. For

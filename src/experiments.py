@@ -19,24 +19,24 @@ def russo_scenario(
     state_factory, k=100, d=100, t=1000, sd=1.0, prior_var=10.0, arm_bound=0.1
 ):
     param = state_factory().randn(d) * prior_var ** 0.5
-    ctx_gen = CtxGenerator.uniform_on_sphere(k, d, arm_bound, state=state_factory())
+    ctx_gen = CtxGenerator.uniform_entries(k, d, arm_bound / d ** 0.5, state=state_factory())
     noise_gen = NoiseGenerator.gaussian_noise(sd, state=state_factory())
 
     env = Environment(param, ctx_gen, noise_gen)
     algs = {
-        "TS-1": Roful.ts(d, prior_var=prior_var, state=state_factory(), inflation=1.0),
-        "TS-2": Roful.ts(d, prior_var=prior_var, state=state_factory(), inflation=5.0),
-        "TS-3": Roful.ts(
-            d,
-            prior_var=prior_var,
-            state=state_factory(),
-            inflation=Roful.conditional_inflation(5.0, thin_thresh=2.0),
-        ),
-        "TS-4": Roful.ts(
+        "TS-Bayes": Roful.ts(d, prior_var=prior_var, state=state_factory(), inflation=1.0),
+        # "TS-2": Roful.ts(d, prior_var=prior_var, state=state_factory(), inflation=5.0),
+        "TS-Freq": Roful.ts(
             d,
             prior_var=prior_var,
             state=state_factory(),
             inflation=Roful.radius_inflation(),
+        ),
+        "TS-Improved": Roful.ts(
+            d,
+            prior_var=prior_var,
+            state=state_factory(),
+            inflation=Roful.conditional_inflation(5.0, thin_thresh=2.0),
         ),
     }
 
@@ -76,10 +76,18 @@ def run_experiments(n, d, k, t, s):
         "cumregret": cumregrets,
         "thinnesses": thinnesses,
     }
+    labels = {
+        "regret": "Instantaneous Regret",
+        "cumregret": "Cumulative Regret",
+        "thinnesses": "Thinness",
+    }
     for name, metric in metrics.items():
         plt.clf()
         for alg, agg in metric.items():
             agg.plot(plt, alg)
+
+        plt.xlabel("Time")
+        plt.ylabel(labels[name])
 
         plt.legend()
         plt.savefig(f"plots/{name}-{n}-{d}-{k}-{t}.pdf")
@@ -90,10 +98,10 @@ def __main__():
         description="Run simulations for various ROFUL algorithms."
     )
 
-    parser.add_argument("-n", type=int, help="number of iterations", default=100)
+    parser.add_argument("-n", type=int, help="number of iterations", default=20)
     parser.add_argument("-k", type=int, help="number of actions", default=100)
     parser.add_argument("-d", type=int, help="dimension", default=50)
-    parser.add_argument("-t", type=int, help="time horizon", default=2000)
+    parser.add_argument("-t", type=int, help="time horizon", default=10000)
     parser.add_argument("-s", type=int, help="random seed", default=1)
 
     args = parser.parse_args()
